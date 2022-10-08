@@ -14,8 +14,14 @@ contract BillionDollarCanvas is ERC721, ERC721Enumerable, ERC721URIStorage {
   // Inital canvas price in wei
   uint256 _initPrice;
 
+  // Amount of blocks a canvas is locked after purchase
+  uint256 _lockPeriod;
+
   // Mapping from token ID to canvas Price
   mapping(uint256 => uint256) private _canvasIdToCanvasPrice;
+
+  // Mapping from canvas Id to block of purchase
+  mapping(uint256 => uint256) private _canvasIdToBlockOfPurchase;
 
   event MintCanvas(
     uint256 canvasId,
@@ -45,9 +51,10 @@ contract BillionDollarCanvas is ERC721, ERC721Enumerable, ERC721URIStorage {
     string newCanvasURI
   );
 
-  constructor(address payable gitcoinAddress, uint256 initPrice) ERC721("BillionDollarCanvas", "BDC") {
+  constructor(address payable gitcoinAddress, uint256 initPrice, uint256 lockPeriod) ERC721("BillionDollarCanvas", "BDC") {
     _gitcoinAddress = gitcoinAddress;
     _initPrice = initPrice;
+    _lockPeriod = lockPeriod;
   }
 
   // The following functions are overrides required by Solidity.
@@ -95,14 +102,20 @@ contract BillionDollarCanvas is ERC721, ERC721Enumerable, ERC721URIStorage {
     _;
   }
 
-  function setCanvasURI(uint256 canvasId, string memory uri)
-    public
-    onlyCanvasOwner(canvasId)
+  function _setCanvasURI(uint256 canvasId, string memory uri)
+    private
   {
     if (keccak256(abi.encodePacked(tokenURI(canvasId))) != keccak256(abi.encodePacked(uri))) {
       emit ChangeCanvasURI(canvasId, tokenURI(canvasId), uri);
       _setTokenURI(canvasId, uri);
     }
+  }
+
+  function setCanvasURI(uint256 canvasId, string memory uri)
+    public
+    onlyCanvasOwner(canvasId)
+  {
+    _setCanvasURI(canvasId, uri);
   }
 
   // Get price of a canvas
@@ -115,16 +128,23 @@ contract BillionDollarCanvas is ERC721, ERC721Enumerable, ERC721URIStorage {
     return _canvasIdToCanvasPrice[canvasId];
   }
 
+  function _setPrice(uint256 canvasId, uint256 price)
+    private
+  {
+    if (_canvasIdToCanvasPrice[canvasId] != price) {
+      emit ChangePrice(canvasId, _canvasIdToCanvasPrice[canvasId], price);
+      _canvasIdToCanvasPrice[canvasId] = price;
+    }
+  }
+
+
   // Set price of canvas
   function setPrice(uint256 canvasId, uint256 price)
     public
     onlyCanvasOwner(canvasId)
   {
     require(_ownerOf(canvasId) == address(0), "You don't own this canvas");
-    if (_canvasIdToCanvasPrice[canvasId] != price) {
-      emit ChangePrice(canvasId, _canvasIdToCanvasPrice[canvasId], price);
-      _canvasIdToCanvasPrice[canvasId] = price;
-    }
+    _setPrice(canvasId, price);
   }
 
   // Everybody can mint
@@ -153,8 +173,10 @@ contract BillionDollarCanvas is ERC721, ERC721Enumerable, ERC721URIStorage {
       emit BuyCanvas(canvasId, currentOwner, msg.sender);
     }
 
-    setPrice(canvasId, price);
+    _setPrice(canvasId, price);
 
-    setCanvasURI(canvasId, uri);
+    _setCanvasURI(canvasId, uri);
+
+    _canvasIdToBlockOfPurchase[canvasId] = block.number;
   }
 }

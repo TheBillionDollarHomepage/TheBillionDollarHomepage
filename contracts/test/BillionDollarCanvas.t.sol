@@ -16,7 +16,7 @@ contract BillionDollarCanvasTest is Test {
 
   function setUp() public {
     address payable gitcoinAddress = payable(address(0xDe30da39c46104798bB5aA3fe8B9e0e1F348163F));
-    billionDollarCanvas = new BillionDollarCanvas(gitcoinAddress, 1 wei);
+    billionDollarCanvas = new BillionDollarCanvas(gitcoinAddress, 1 wei, 225);
     canvasIdCounter = 0;
 
     vm.deal(address(1), 100 ether);
