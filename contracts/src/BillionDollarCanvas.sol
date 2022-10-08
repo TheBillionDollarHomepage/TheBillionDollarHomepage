@@ -63,9 +63,9 @@ contract BillionDollarCanvas is ERC721, ERC721Enumerable, ERC721URIStorage {
     payable
   {
     // but only if token is not already minted
-    require(_ownerOf(tokenId) == address(0));
+    require(_ownerOf(tokenId) == address(0), "Already owned");
     // and only if tx contains enough ether
-    require(msg.value >= initPrice);
+    require(msg.value >= initPrice, "Not enough wei provided");
     // transfer all tx value to receiver
     gitcoinAddress.transfer(msg.value);
 
