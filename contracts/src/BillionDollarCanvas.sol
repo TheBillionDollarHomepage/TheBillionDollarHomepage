@@ -11,7 +11,7 @@ contract BillionDollarCanvas is ERC721, ERC721Enumerable, ERC721URIStorage {
   // gitcoinAddress
   address payable gitcoinAddress;
 
-  // Inital canvas price in gwei
+  // Inital canvas price in wei
   uint256 initPrice;
 
   constructor(address payable gitcoinAddress, uint256 initPrice) ERC721("BillionDollarCanvas", "BDC") {
@@ -57,19 +57,19 @@ contract BillionDollarCanvas is ERC721, ERC721Enumerable, ERC721URIStorage {
     return super.supportsInterface(interfaceId);
   }
 
-  // Every can mint
-  function buy(address to, uint256 tokenId, string memory uri)
+  // Everybody can mint
+  function buy(uint256 tokenId, string memory uri)
     public
     payable
   {
     // but only if token is not already minted
     require(_ownerOf(tokenId) == address(0));
-    // and only if tx contains enouth ether
-    require(msg.value <= initPrice);
+    // and only if tx contains enough ether
+    require(msg.value >= initPrice);
     // transfer all tx value to receiver
     gitcoinAddress.transfer(msg.value);
 
-    _safeMint(to, tokenId);
+    _safeMint(msg.sender, tokenId);
     _setTokenURI(tokenId, uri);
   }
 }
