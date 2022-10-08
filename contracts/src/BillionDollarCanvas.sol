@@ -90,8 +90,14 @@ contract BillionDollarCanvas is ERC721, ERC721Enumerable, ERC721URIStorage {
 
   //// Own provided functions
 
+  modifier onlyCanvasOwner(uint256 canvasId) {
+    require(_ownerOf(canvasId) == address(0), "You don't own this canvas");
+    _;
+  }
+
   function setCanvasURI(uint256 canvasId, string memory uri)
     public
+    onlyCanvasOwner(canvasId)
   {
     if (keccak256(abi.encodePacked(tokenURI(canvasId))) != keccak256(abi.encodePacked(uri))) {
       emit ChangeCanvasURI(canvasId, tokenURI(canvasId), uri);
@@ -110,7 +116,10 @@ contract BillionDollarCanvas is ERC721, ERC721Enumerable, ERC721URIStorage {
   }
 
   // Set price of canvas
-  function setPrice(uint256 canvasId, uint256 price) public {
+  function setPrice(uint256 canvasId, uint256 price)
+    public
+    onlyCanvasOwner(canvasId)
+  {
     require(_ownerOf(canvasId) == address(0), "You don't own this canvas");
     if (_canvasIdToCanvasPrice[canvasId] != price) {
       emit ChangePrice(canvasId, _canvasIdToCanvasPrice[canvasId], price);
