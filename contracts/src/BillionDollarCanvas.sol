@@ -102,6 +102,12 @@ contract BillionDollarCanvas is ERC721, ERC721Enumerable, ERC721URIStorage {
     _;
   }
 
+  modifier isUnlocked(uint256 canvasId) {
+    if (_canvasIdToBlockOfPurchase[canvasId] != 0)
+      require(_canvasIdToBlockOfPurchase[canvasId] + _lockPeriod <= block.number, "Canvas is still locked");
+    _;
+  }
+
   function _setCanvasURI(uint256 canvasId, string memory uri)
     private
   {
@@ -151,6 +157,7 @@ contract BillionDollarCanvas is ERC721, ERC721Enumerable, ERC721URIStorage {
   function buy(uint256 canvasId, string memory uri, uint256 price)
     public
     payable
+    isUnlocked(canvasId)
   {
     uint256 currentPrice = priceOf(canvasId);
     require(_ownerOf(canvasId) != msg.sender, "You already own this canvas");
