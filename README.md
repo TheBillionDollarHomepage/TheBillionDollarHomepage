@@ -1,5 +1,21 @@
 # TheBillionDollarHomepage
 
+Find [Setup](#setup) instructions below.
+
+## Usage
+
+Run foundry tests
+
+```shell
+forge test
+```
+
+Run foundry build
+
+```shell
+forge build
+```
+
 ## Setup
 
 ### Foundry
