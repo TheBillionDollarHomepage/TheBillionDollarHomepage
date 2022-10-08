@@ -7,7 +7,16 @@ import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 
 /// @custom:security-contact smuu.eth@proton.me
 contract BillionDollarCanvas is ERC721, ERC721Enumerable, ERC721URIStorage {
-  constructor() ERC721("BillionDollarCanvas", "BDC") {}
+
+  // Inital canvas price in gwei
+  uint256 initPrice;
+
+  // gitcoinAddress
+  address payable receiverAddress;
+
+  constructor(address payable gitcoinAddress) ERC721("BillionDollarCanvas", "BDC") {
+    receiverAddress = gitcoinAddress;
+  }
 
   // The following functions are overrides required by Solidity.
 
@@ -45,5 +54,21 @@ contract BillionDollarCanvas is ERC721, ERC721Enumerable, ERC721URIStorage {
     returns (bool)
   {
     return super.supportsInterface(interfaceId);
+  }
+
+  // Every can mint
+  function buy(address to, uint256 tokenId, string memory uri)
+    public
+    payable
+  {
+    // but only if token is not already minted
+    require(_ownerOf(tokenId) == address(0));
+    // and only if tx contains enouth ether
+    require(msg.value <= initPrice);
+    // transfer all tx value to receiver
+    receiverAddress.transfer(msg.value);
+
+    _safeMint(to, tokenId);
+    _setTokenURI(tokenId, uri);
   }
 }

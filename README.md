@@ -4,6 +4,12 @@ Find [Setup](#setup) instructions below.
 
 ## Usage
 
+Change to contract directory
+
+```shell
+cd contacts
+```
+
 Run foundry tests
 
 ```shell
