@@ -150,7 +150,7 @@ contract BillionDollarCanvas is ERC721, ERC721Enumerable, ERC721URIStorage {
     public
     onlyCanvasOwner(canvasId)
   {
-    require(_ownerOf(canvasId) == address(0), "You don't own this canvas");
+    require(_ownerOf(canvasId) == msg.sender, "You don't own this canvas");
     _setPrice(canvasId, price);
   }
 
