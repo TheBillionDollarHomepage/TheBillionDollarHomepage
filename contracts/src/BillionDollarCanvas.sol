@@ -9,14 +9,17 @@ import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 contract BillionDollarCanvas is ERC721, ERC721Enumerable, ERC721URIStorage {
 
   // gitcoinAddress
-  address payable gitcoinAddress;
+  address payable _gitcoinAddress;
 
   // Inital canvas price in wei
-  uint256 initPrice;
+  uint256 _initPrice;
+
+  // Mapping from token ID to canvas Price
+  mapping(uint256 => uint256) private _canvasIdToCanvasPrice;
 
   constructor(address payable gitcoinAddress, uint256 initPrice) ERC721("BillionDollarCanvas", "BDC") {
-    gitcoinAddress = gitcoinAddress;
-    initPrice = initPrice;
+    _gitcoinAddress = gitcoinAddress;
+    _initPrice = initPrice;
   }
 
   // The following functions are overrides required by Solidity.
@@ -57,19 +60,41 @@ contract BillionDollarCanvas is ERC721, ERC721Enumerable, ERC721URIStorage {
     return super.supportsInterface(interfaceId);
   }
 
+  // Get price of a canvas
+  function priceOf(uint256 canvasId) public view returns (uint256) {
+    // If a canvas has no owner return the init price
+    if (_ownerOf(canvasId) == address(0)) {
+      return _initPrice;
+    }
+    // return the current canvas price
+    return _canvasIdToCanvasPrice[canvasId];
+  }
+
   // Everybody can mint
-  function buy(uint256 tokenId, string memory uri)
+  function buy(uint256 canvasId, string memory uri, uint256 price)
     public
     payable
   {
-    // but only if token is not already minted
-    require(_ownerOf(tokenId) == address(0), "Already owned");
-    // and only if tx contains enough ether
-    require(msg.value >= initPrice, "Not enough wei provided");
-    // transfer all tx value to receiver
-    gitcoinAddress.transfer(msg.value);
+    require(_ownerOf(canvasId) != msg.sender, "You already own this canvas");
+    require(msg.value >= priceOf(canvasId), "Not enough wei provided");
 
-    _safeMint(msg.sender, tokenId);
-    _setTokenURI(tokenId, uri);
+    address payable currentOwner = payable(_ownerOf(canvasId));
+
+    if (currentOwner == address(0))
+    // if canvas is not owned yet send tx value to gitcoin
+    {
+      _gitcoinAddress.transfer(msg.value);
+      _safeMint(msg.sender, canvasId);
+    }
+    else
+    // if canvas is owned, send tx value to old owner
+    {
+      // FIXME: Not save this way! Instead use withdrawal function
+      currentOwner.send(msg.value);
+    }
+
+    _canvasIdToCanvasPrice[canvasId] = price;
+
+    _setTokenURI(canvasId, uri);
   }
 }
