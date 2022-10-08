@@ -21,6 +21,7 @@ contract BillionDollarCanvasTest is Test {
 
     vm.deal(address(1), 100 ether);
     vm.deal(address(2), 100 ether);
+    vm.deal(address(3), 100 ether);
   }
 
   function test_buy() public {
@@ -49,12 +50,13 @@ contract BillionDollarCanvasTest is Test {
 
   function test_buy_and_buy() public {
     canvasIdCounter = canvasIdCounter + 1;
-    vm.prank(address(1));
-    billionDollarCanvas.buy{value: 1 wei}(canvasIdCounter, tokenURI1, 5);
-    emit log(vm.toString(billionDollarCanvas.priceOf(canvasIdCounter)));
-    uint256 balance_old = address(1).balance;
+    uint256 price = 5 wei;
     vm.prank(address(2));
-    billionDollarCanvas.buy{value: 5 wei}(canvasIdCounter, tokenURI2, 5);
-    uint256 balance_new = address(1).balance;
+    billionDollarCanvas.buy{value: 1 wei}(canvasIdCounter, tokenURI1, price);
+    uint256 balance_old = address(2).balance;
+    vm.prank(address(3));
+    billionDollarCanvas.buy{value: price}(canvasIdCounter, tokenURI2, 10);
+    uint256 balance_new = address(2).balance;
+    assertEq(balance_new - balance_old, price);
   }
 }
