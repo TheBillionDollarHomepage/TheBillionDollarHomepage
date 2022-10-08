@@ -92,13 +92,12 @@ contract BillionDollarCanvas is ERC721, ERC721Enumerable, ERC721URIStorage {
 
   function setCanvasURI(uint256 canvasId, string memory uri)
     public
-    view
     returns (string memory)
   {
-    if (tokenURI(canvasId) != uri) {
-      emit ChangeCanvasURI(canvasId, tokenURI(canvasId), uri);
-      _setTokenURI(canvasId, uri);
-    }
+    // if (tokenURI(canvasId) != uri) {
+    emit ChangeCanvasURI(canvasId, tokenURI(canvasId), uri);
+    _setTokenURI(canvasId, uri);
+    // }
   }
 
   // Get price of a canvas
