@@ -195,6 +195,7 @@ contract BillionDollarCanvas is ERC721, ERC721Enumerable, ERC721URIStorage {
     else
     // if canvas is owned, send tx value to old owner
     {
+      _safeTransfer(currentOwner, msg.sender, canvasId, "");
       // FIXME: Not save this way! Instead use withdrawal function
       currentOwner.transfer(msg.value);
       emit BuyCanvas(canvasId, currentOwner, msg.sender);
