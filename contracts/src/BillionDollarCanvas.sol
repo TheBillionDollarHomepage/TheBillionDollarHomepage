@@ -17,6 +17,34 @@ contract BillionDollarCanvas is ERC721, ERC721Enumerable, ERC721URIStorage {
   // Mapping from token ID to canvas Price
   mapping(uint256 => uint256) private _canvasIdToCanvasPrice;
 
+  event MintCanvas(
+    uint256 canvasId,
+    address owner
+  );
+
+  event BuyCanvas(
+    uint256 canvasId,
+    address oldOwner,
+    address newOwner
+  );
+
+  event AuctionCanvas(
+    uint256 canvasId,
+    address oldOwner
+  );
+
+  event ChangePrice(
+    uint256 canvasId,
+    uint256 oldPrice,
+    uint256 newPrice
+  );
+
+  event ChangeCanvasURI(
+    uint256 canvasId,
+    string oldCanvasURI,
+    string newCanvasURI
+  );
+
   constructor(address payable gitcoinAddress, uint256 initPrice) ERC721("BillionDollarCanvas", "BDC") {
     _gitcoinAddress = gitcoinAddress;
     _initPrice = initPrice;
@@ -60,6 +88,19 @@ contract BillionDollarCanvas is ERC721, ERC721Enumerable, ERC721URIStorage {
     return super.supportsInterface(interfaceId);
   }
 
+  //// Own provided functions
+
+  function setCanvasURI(uint256 canvasId, string memory uri)
+    public
+    view
+    returns (string memory)
+  {
+    if (tokenURI(canvasId) != uri) {
+      emit ChangeCanvasURI(canvasId, tokenURI(canvasId), uri);
+      _setTokenURI(canvasId, uri);
+    }
+  }
+
   // Get price of a canvas
   function priceOf(uint256 canvasId) public view returns (uint256) {
     // If a canvas has no owner return the init price
@@ -70,13 +111,23 @@ contract BillionDollarCanvas is ERC721, ERC721Enumerable, ERC721URIStorage {
     return _canvasIdToCanvasPrice[canvasId];
   }
 
+  // Set price of canvas
+  function setPrice(uint256 canvasId, uint256 price) public {
+    require(_ownerOf(canvasId) == address(0), "You don't own this canvas");
+    if (_canvasIdToCanvasPrice[canvasId] != price) {
+      emit ChangePrice(canvasId, _canvasIdToCanvasPrice[canvasId], price);
+      _canvasIdToCanvasPrice[canvasId] = price;
+    }
+  }
+
   // Everybody can mint
   function buy(uint256 canvasId, string memory uri, uint256 price)
     public
     payable
   {
+    uint256 currentPrice = priceOf(canvasId);
     require(_ownerOf(canvasId) != msg.sender, "You already own this canvas");
-    require(msg.value >= priceOf(canvasId), "Not enough wei provided");
+    require(msg.value >= currentPrice, "Not enough wei provided");
 
     address payable currentOwner = payable(_ownerOf(canvasId));
 
@@ -85,15 +136,20 @@ contract BillionDollarCanvas is ERC721, ERC721Enumerable, ERC721URIStorage {
     {
       _gitcoinAddress.transfer(msg.value);
       _safeMint(msg.sender, canvasId);
+      emit MintCanvas(canvasId, msg.sender);
     }
     else
     // if canvas is owned, send tx value to old owner
     {
       // FIXME: Not save this way! Instead use withdrawal function
       currentOwner.send(msg.value);
+      emit BuyCanvas(canvasId, currentOwner, msg.sender);
     }
 
     _canvasIdToCanvasPrice[canvasId] = price;
+    if (currentPrice != price) {
+      emit ChangePrice(canvasId, currentPrice, price);
+    }
 
     _setTokenURI(canvasId, uri);
   }
