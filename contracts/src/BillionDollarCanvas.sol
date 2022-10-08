@@ -15,6 +15,7 @@ contract BillionDollarCanvas is ERC721, ERC721Enumerable, ERC721URIStorage {
   uint256 _initPrice;
 
   // Amount of blocks a canvas is locked after purchase
+  // 25 * 60 * 60 / 12 = 7200 blocks per 24 hours
   uint256 _lockPeriod;
 
   // Mapping from token ID to canvas Price
@@ -151,6 +152,12 @@ contract BillionDollarCanvas is ERC721, ERC721Enumerable, ERC721URIStorage {
   {
     require(_ownerOf(canvasId) == address(0), "You don't own this canvas");
     _setPrice(canvasId, price);
+  }
+
+  // Get fee per week on a canvas
+  function getFeePerWeek(uint256 canvasId) public
+  {
+    priceOf(canvasId) / 100;
   }
 
   // Everybody can mint
