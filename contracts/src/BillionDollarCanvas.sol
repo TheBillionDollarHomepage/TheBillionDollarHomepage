@@ -99,7 +99,7 @@ contract BillionDollarCanvas is ERC721, ERC721Enumerable, ERC721URIStorage {
   //// Own provided functions
 
   modifier onlyCanvasOwner(uint256 canvasId) {
-    require(_ownerOf(canvasId) == address(0), "You don't own this canvas");
+    require(_ownerOf(canvasId) == msg.sender, "You don't own this canvas");
     _;
   }
 
@@ -150,14 +150,25 @@ contract BillionDollarCanvas is ERC721, ERC721Enumerable, ERC721URIStorage {
     public
     onlyCanvasOwner(canvasId)
   {
-    require(_ownerOf(canvasId) == msg.sender, "You don't own this canvas");
     _setPrice(canvasId, price);
   }
 
   // Get fee per week on a canvas
-  function getFeePerWeek(uint256 canvasId) public
+  function getFeePerWeek(uint256 canvasId)
+    public
+    returns (uint256)
   {
-    priceOf(canvasId) / 100;
+    return priceOf(canvasId) / 100;
+  }
+
+  // Calculate upfront fee
+  function _upfrontFee(uint256 blocks, uint256 feePerWeek)
+    private
+    view
+    returns (uint256)
+  {
+    // one block every 12 seconds -> calculate that tow many weeks multiplied by fee per week
+    return blocks * 12 / 60 / 60 / 24 / 7 * feePerWeek;
   }
 
   // Everybody can mint
@@ -168,7 +179,9 @@ contract BillionDollarCanvas is ERC721, ERC721Enumerable, ERC721URIStorage {
   {
     uint256 currentPrice = priceOf(canvasId);
     require(_ownerOf(canvasId) != msg.sender, "You already own this canvas");
-    require(msg.value >= currentPrice, "Not enough wei provided");
+    // upfront payment of fees is needed for the locking period (1 block per 12 seconds)
+    uint256 upfrontFee = _upfrontFee(_lockPeriod, getFeePerWeek(canvasId));
+    require(msg.value >= currentPrice + upfrontFee, "Not enough wei provided");
 
     address payable currentOwner = payable(_ownerOf(canvasId));
 
