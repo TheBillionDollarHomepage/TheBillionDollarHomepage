@@ -1,5 +1,9 @@
 # TheBillionDollarHomepage
 
+An advertisement billboard for public goods. Inspired by "TheMillionDollarPage" , but using harberger taxes that fund gitcoin.
+
+See more informatiomn here: https://ethglobal.com/showcase/the-billion-dollar-homepage-ixisb
+
 Find [Setup](#setup) instructions below.
 
 ## Usage
